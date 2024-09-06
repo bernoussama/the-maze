@@ -58,51 +58,7 @@ const int UNIT = 64;
 void drawRays(SDL_Renderer *renderer, double x, double y, double playerAngle);
 
 void drawRays(SDL_Renderer *renderer, double px, double py,
-              double playerAngle) {
-  int ray, dof, mX, mY;
-  double rayX, rayY, rayAngle, xoffset, yoffset;
-  rayAngle = playerAngle;
-  for (ray = 0; ray < 1; ray++) {
-    dof = 0;
-    double aTan = -1 / tan(rayAngle);
-    if (rayAngle > PI) {
-      rayY = (((int)py >> 6) << 6) - 0.0001;
-      rayX = px + (py - rayY) * aTan;
-      yoffset = -64;
-      xoffset = -yoffset * aTan;
-    }
-    if (rayAngle < PI) {
-      rayY = (((int)py >> 6) << 6) + 64;
-      rayX = px + (py - rayY) * aTan;
-      yoffset = 64;
-      xoffset = -yoffset * aTan;
-    }
-    if (rayAngle == 0 || rayAngle == PI) {
-      rayX = px;
-      rayY = py;
-      dof = 8;
-    }
-
-    while (dof < 8) {
-      mX = (int)rayX >> 6;
-      mY = (int)rayY >> 6;
-      if (mX >= 0 && mX < mapWidth && mY >= 0 && mY < mapHeight &&
-          worldMap[mX][mY] > 0) {
-        dof = 8;
-        break;
-      } else {
-        rayX += xoffset;
-        rayY += yoffset;
-        dof += 1;
-      }
-    }
-
-    // set green color
-    SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
-    SDL_RenderDrawLine(renderer, px, py, rayX, rayY);
-    // SDL_RenderPresent(renderer);
-  }
-}
+              double playerAngle) {}
 
 int main(void) {
   /* window will be rendering to */

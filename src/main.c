@@ -86,7 +86,8 @@ void drawRays(SDL_Renderer *renderer, double px, double py,
     while (dof < 8) {
       mX = (int)rayX >> 6;
       mY = (int)rayY >> 6;
-      if (worldMap[mX][mY] > 0) {
+      if (mX >= 0 && mX < mapWidth && mY >= 0 && mY < mapHeight &&
+          worldMap[mX][mY] > 0) {
         dof = 8;
         break;
       } else {

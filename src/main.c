@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_assert.h>
 #include <SDL2/SDL_render.h>
 #include <math.h>
 #include <stdbool.h>
@@ -57,188 +58,278 @@ const int UNIT = 64;
 
 void drawRays(SDL_Renderer *renderer, double x, double y, double playerAngle);
 
-void drawRays(SDL_Renderer *renderer, double px, double py,
-              double playerAngle) {}
+void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
+{
 
-int main(void) {
-  /* window will be rendering to */
-  SDL_Window *window;
-  SDL_Renderer *renderer;
+	double rayAngle, rayX, rayY, Xoffset, Yoffset;
+	rayAngle = playerAngle;
+	printf("rayAngle: %f\n", rayAngle);
 
-  /* The surface contained by the window */
-  SDL_Surface *screenSurface = NULL;
+	int rays, x, y;
+	rays = 1;
+	for (int ray = 0; ray < rays; ray++)
+	{
+		if (rayAngle < PI && rayAngle > 0)
+		{
+			rayY = (((int)py >> 6) << 6) -
+			       1; // bit shift shananigans to round down
+			rayX = px + (py - rayY) / tan(rayAngle);
+			Yoffset = -64;
+			Xoffset = 64 / tan(rayAngle);
+		}
+		else if (rayAngle > PI && rayAngle < (2 * PI))
+		{
+			rayY = (((int)py >> 6) << 6) +
+			       64; // bit shift shananigans to round down
+			rayX = px + (py - rayY) / tan(rayAngle);
+			Yoffset = 64;
 
-  double w = SCREEN_WIDTH, h = SCREEN_HEIGHT;
-  double posX = 22, posY = 12;     // player x and y start position
-  double pdeltaX = 0, pdeltaY = 0; // player direction vector
-  double pangle = 0;               // player angle
-  double dirX = -1, dirY = 0;      // initial direction vector
-  double planeX = 0,
-         planeY = 0.66; // the 2d raycaster version of camera plane
+			Xoffset = -64 / tan(rayAngle);
+		}
+		else if (rayAngle == 0 || rayAngle == PI)
+		{
+			rayY = py;
+			rayX = px;
+			Xoffset = 64 / tan(rayAngle);
+		}
+		printf("rayX: %f, rayY: %f\n", rayX, rayY);
+		x = (int)rayX >> 6;
+		y = (int)rayY >> 6;
+		printf("x: %d, y: %d\n", x, y);
+		while (x >= 0 && x < mapWidth && y >= 0 && y < mapHeight &&
+		       worldMap[y][x] <= 0)
+		{
+			printf("x: %d, y: %d\n", x, y);
+			rayX += Xoffset;
+			rayY += Yoffset;
+			x = (int)rayX >> 6;
+			y = (int)rayY >> 6;
+		}
+		SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
+		SDL_RenderDrawLine(renderer, px, py, rayX, rayY);
 
-  double time = 0;    // time of current frame
-  double oldTime = 0; // time of previous frame
+		SDL_RenderPresent(renderer);
+	}
+}
 
-  /* Initialize SDL */
-  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-    fprintf(stderr, "Unable to initialize SDL: %s\n", SDL_GetError());
-    return (1);
-  }
+int main(void)
+{
+	/* window will be rendering to */
+	SDL_Window *window;
+	SDL_Renderer *renderer;
 
-  /* Create a new window instance */
-  window =
-      SDL_CreateWindow("SDL2 raycaster", SDL_WINDOWPOS_CENTERED,
-                       SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-  if (window == NULL) {
-    fprintf(stderr, "SDL_Createwindow Error: %s\n", SDL_GetError());
-    SDL_Quit();
-    return (1);
-  }
+	/* The surface contained by the window */
+	SDL_Surface *screenSurface = NULL;
 
-  /* create a new renderer instance linked to the Window */
-  renderer = SDL_CreateRenderer(
-      window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-  if (renderer == NULL) {
-    SDL_DestroyWindow(window);
-    fprintf(stderr, "SDL_CreateRenderer Error: %s\n", SDL_GetError());
-    SDL_Quit();
-    return (1);
-  }
-  // Get window surface
-  screenSurface = SDL_GetWindowSurface(window);
+	double w = SCREEN_WIDTH, h = SCREEN_HEIGHT;
+	double posX = 22, posY = 12;	 // player x and y start position
+	double pdeltaX = 0, pdeltaY = 0; // player direction vector
+	double pangle = 0;		 // player angle
+	double dirX = -1, dirY = 0;	 // initial direction vector
+	double planeX = 0,
+	       planeY = 0.66; // the 2d raycaster version of camera plane
 
-  // Fill the surface white
-  // SDL_FillRect(screenSurface, NULL,
-  //              SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
-  //
-  // // Update the surface
-  // SDL_UpdateWindowSurface(window);
+	double time = 0;    // time of current frame
+	double oldTime = 0; // time of previous frame
 
-  SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-  SDL_RenderClear(renderer);
+	/* Initialize SDL */
+	if (SDL_Init(SDL_INIT_VIDEO) != 0)
+	{
+		fprintf(stderr, "Unable to initialize SDL: %s\n",
+			SDL_GetError());
+		return (1);
+	}
 
-  // Render red filled quad
-  // SDL_Rect fillRect = {SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4, SCREEN_WIDTH /
-  // 2,
-  //                      SCREEN_HEIGHT / 2};
-  //
-  // SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
-  // SDL_RenderFillRect(renderer, &fillRect);
-  //
-  // // Render green outlined quad
-  // SDL_Rect outlineRect = {SCREEN_WIDTH / 6, SCREEN_HEIGHT / 6,
-  //                         SCREEN_WIDTH * 2 / 3, SCREEN_HEIGHT * 2 / 3};
-  // SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
-  // SDL_RenderDrawRect(renderer, &outlineRect);
-  //
-  // // Render blue line
-  // SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
-  // SDL_RenderDrawLine(renderer, 0, SCREEN_HEIGHT / 2, SCREEN_WIDTH,
-  //                    SCREEN_HEIGHT / 2);
-  // SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0x00, 0xFF);
-  // for (int i = 0; i < SCREEN_HEIGHT; i += 4) {
-  //   SDL_RenderDrawPoint(renderer, SCREEN_WIDTH / 2, i);
-  // }
+	/* Create a new window instance */
+	window = SDL_CreateWindow("SDL2 raycaster", SDL_WINDOWPOS_CENTERED,
+				  SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH,
+				  SCREEN_HEIGHT, 0);
+	if (window == NULL)
+	{
+		fprintf(stderr, "SDL_Createwindow Error: %s\n", SDL_GetError());
+		SDL_Quit();
+		return (1);
+	}
 
-  SDL_Rect player = {posX, posY, 8, 8};
+	/* create a new renderer instance linked to the Window */
+	renderer = SDL_CreateRenderer(
+	    window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	if (renderer == NULL)
+	{
+		SDL_DestroyWindow(window);
+		fprintf(stderr, "SDL_CreateRenderer Error: %s\n",
+			SDL_GetError());
+		SDL_Quit();
+		return (1);
+	}
+	// Get window surface
+	screenSurface = SDL_GetWindowSurface(window);
 
-  // Fill the surface white
-  SDL_FillRect(screenSurface, NULL,
-               SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
-  // Draw the map
-  for (int y = 0; y < mapHeight; y++) {
-    for (int x = 0; x < mapWidth; x++) {
-      if (worldMap[x][y] > 0) {
-        SDL_Rect wall = {x * 20, y * 20, 20, 20}; // Adjust size as needed
-        SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00,
-                               0xFF); // Black color for walls
-        SDL_RenderFillRect(renderer, &wall);
-      }
-    }
-  }
+	// Fill the surface white
+	// SDL_FillRect(screenSurface, NULL,
+	//              SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
+	//
+	// // Update the surface
+	// SDL_UpdateWindowSurface(window);
 
-  // Update the surface
-  SDL_UpdateWindowSurface(window);
+	SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+	SDL_RenderClear(renderer);
 
-  // Draw the player
-  SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
-  SDL_RenderFillRect(renderer, &player);
+	// Render red filled quad
+	// SDL_Rect fillRect = {SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4,
+	// SCREEN_WIDTH / 2,
+	//                      SCREEN_HEIGHT / 2};
+	//
+	// SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
+	// SDL_RenderFillRect(renderer, &fillRect);
+	//
+	// // Render green outlined quad
+	// SDL_Rect outlineRect = {SCREEN_WIDTH / 6, SCREEN_HEIGHT / 6,
+	//                         SCREEN_WIDTH * 2 / 3, SCREEN_HEIGHT * 2 / 3};
+	// SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
+	// SDL_RenderDrawRect(renderer, &outlineRect);
+	//
+	// // Render blue line
+	// SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
+	// SDL_RenderDrawLine(renderer, 0, SCREEN_HEIGHT / 2, SCREEN_WIDTH,
+	//                    SCREEN_HEIGHT / 2);
+	// SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0x00, 0xFF);
+	// for (int i = 0; i < SCREEN_HEIGHT; i += 4) {
+	//   SDL_RenderDrawPoint(renderer, SCREEN_WIDTH / 2, i);
+	// }
 
-  pdeltaX = cos(pangle) * 5;
-  pdeltaY = sin(pangle) * 5;
-  SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
-  SDL_RenderDrawLine(renderer, player.x, player.y, player.x + pdeltaX * 5,
-                     player.y + pdeltaY * 5);
-  SDL_RenderPresent(renderer);
+	SDL_Rect player = {posX, posY, 8, 8};
 
-  // Hack to get window to stay up
-  SDL_Event e;
-  bool quit = false;
-  while (quit == false) {
-    while (SDL_PollEvent(&e)) {
-      printf("Event type: %d\n", e.type);
-      if (e.type == SDL_QUIT) {
-        printf("Event quit: %d\n", e.type);
-        quit = true;
-      }
-      // User presses a key
-      else if (e.type == SDL_KEYDOWN) {
-        switch (e.key.keysym.sym) {
-        case SDLK_UP:
-          player.x += pdeltaX;
-          player.y += pdeltaY;
-          break;
-        case SDLK_DOWN:
-          player.x -= pdeltaX;
-          player.y -= pdeltaY;
-          break;
-        case SDLK_LEFT:
-          pangle -= 0.1; // Rotate the player left
-          if (pangle < 0)
-            pangle += 2 * PI;
-          pdeltaX = cos(pangle) * 5;
-          pdeltaY = sin(pangle) * 5;
-          break;
-        case SDLK_RIGHT:
-          pangle += 0.1; // Rotate the player left
-          if (pangle > 2 * PI)
-            pangle -= 2 * PI;
-          pdeltaX = cos(pangle) * 5;
-          pdeltaY = sin(pangle) * 5;
-          break;
-        default:
-          continue;
-        }
+	// Fill the surface white
+	SDL_FillRect(screenSurface, NULL,
+		     SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
+	// Draw the map
+	for (int y = mapHeight - 1; y >= 0; y--)
+	{
+		for (int x = 0; x < mapWidth; x++)
+		{
+			if (worldMap[x][y] > 0)
+			{
+				SDL_Rect wall = {x * 20, y * 20, 20,
+						 20}; // Adjust size as needed
+				SDL_SetRenderDrawColor(
+				    renderer, 0x00, 0x00, 0x00,
+				    0xFF); // Black color for walls
+				SDL_RenderFillRect(renderer, &wall);
+			}
+		}
+	}
 
-        SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-        SDL_RenderClear(renderer);
-        // Draw the map
-        for (int x = 0; x < mapWidth; x++) {
-          for (int y = 0; y < mapHeight; y++) {
-            if (worldMap[x][y] > 0) {
-              SDL_Rect wall = {x * 20, y * 20, 20, 20}; // Adjust size as needed
-              SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00,
-                                     0xFF); // Black color for walls
-              SDL_RenderFillRect(renderer, &wall);
-            }
-          }
-        }
-        SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
-        SDL_RenderFillRect(renderer, &player);
+	// Update the surface
+	SDL_UpdateWindowSurface(window);
 
-        SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
-        SDL_RenderDrawLine(renderer, player.x, player.y, player.x + pdeltaX * 5,
-                           player.y + pdeltaY * 5);
-        drawRays(renderer, player.x, player.y, pangle);
-        SDL_RenderPresent(renderer);
-      }
-    }
-  }
-  // Destroy window
-  SDL_DestroyWindow(window);
+	// Draw the player
+	SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
+	SDL_RenderFillRect(renderer, &player);
 
-  // Quit SDL subsystems
-  SDL_Quit();
+	pdeltaX = cos(pangle) * 5;
+	pdeltaY = sin(pangle) * 5;
+	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
+	SDL_RenderDrawLine(renderer, player.x, player.y, player.x + pdeltaX * 5,
+			   player.y + pdeltaY * 5);
+	SDL_RenderPresent(renderer);
 
-  return (0);
+	// Hack to get window to stay up
+	SDL_Event e;
+	bool quit = false;
+	while (quit == false)
+	{
+		while (SDL_PollEvent(&e))
+		{
+			printf("Event type: %d\n", e.type);
+			if (e.type == SDL_QUIT)
+			{
+				printf("Event quit: %d\n", e.type);
+				quit = true;
+			}
+			// User presses a key
+			else if (e.type == SDL_KEYDOWN)
+			{
+				switch (e.key.keysym.sym)
+				{
+				case SDLK_UP:
+					player.x += pdeltaX;
+					player.y += pdeltaY;
+					break;
+				case SDLK_DOWN:
+					player.x -= pdeltaX;
+					player.y -= pdeltaY;
+					break;
+				case SDLK_LEFT:
+					pangle += 0.1; // Rotate the player left
+					if (pangle > 2 * PI)
+						pangle -= 2 * PI;
+					pdeltaX = cos(pangle) * 5;
+					pdeltaY = -sin(pangle) *
+						  5; // minus because fckn sdl
+						     // have y flipped
+					break;
+				case SDLK_RIGHT:
+					pangle -= 0.1; // Rotate the player left
+					if (pangle < 0)
+						pangle += 2 * PI;
+					pdeltaX = cos(pangle) * 5;
+					pdeltaY = -sin(pangle) *
+						  5; // minus because fckn sdl
+						     // have y flipped
+					break;
+				default:
+					continue;
+				}
+
+				SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF,
+						       0xFF, 0xFF);
+				SDL_RenderClear(renderer);
+				// Draw the map
+				for (int x = 0; x < mapWidth; x++)
+				{
+					for (int y = mapHeight - 1; y >= 0; y--)
+					{
+						if (worldMap[x][y] > 0)
+						{
+							SDL_Rect wall = {
+							    x * 20, y * 20, 20,
+							    20}; // Adjust size
+								 // as needed
+							SDL_SetRenderDrawColor(
+							    renderer, 0x00,
+							    0x00, 0x00,
+							    0xFF); // Black
+								   // color for
+								   // walls
+							SDL_RenderFillRect(
+							    renderer, &wall);
+						}
+					}
+				}
+				SDL_SetRenderDrawColor(renderer, 0xFF, 0x00,
+						       0x00, 0xFF);
+				SDL_RenderFillRect(renderer, &player);
+
+				SDL_SetRenderDrawColor(renderer, 0x00, 0x00,
+						       0xFF, 0xFF);
+				SDL_RenderDrawLine(renderer, player.x, player.y,
+						   player.x + pdeltaX * 5,
+						   player.y + pdeltaY * 5);
+				drawRays(renderer, player.x, player.y, pangle);
+				SDL_RenderPresent(renderer);
+				printf("px: %d, py: %d\n", player.x, player.y);
+				printf("pdeltaX: %f, pdeltaY: %f\n", pdeltaX,
+				       pdeltaY);
+				printf("pangle: %f\n", pangle);
+			}
+		}
+	}
+	// Destroy window
+	SDL_DestroyWindow(window);
+
+	// Quit SDL subsystems
+	SDL_Quit();
+
+	return (0);
 }

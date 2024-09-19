@@ -8,39 +8,28 @@
 
 // Key press surfaces constants
 
-#define mapWidth 24
-#define mapHeight 24
 #define screenWidth 640
 #define screenHeight 480
 
-int worldMap[mapWidth][mapHeight] = {
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
+#define mapWidth 8
+#define mapHeight 8
+
+// clang-format off
+int worldMap[mapWidth][mapHeight] = 
+  {
+    {0, 0, 1, 1, 1, 1, 1, 1},
+    {1, 0, 1, 0, 0, 0, 0, 1},
+    {1, 0, 1, 1, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 1, 1, 1},
+    {1, 1, 0, 1, 0, 1, 0, 1},
+    {1, 0, 0, 0, 0, 1, 0, 1},
+    {1, 0, 0, 1, 0, 0, 0, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1}
+};
+// clang-format on
 
 /* Screen dimension constants */
-const int SCREEN_HEIGHT = 1536;
+const int SCREEN_HEIGHT = 512;
 const int SCREEN_WIDTH = SCREEN_HEIGHT * 2;
 
 const int UNIT = 64;
@@ -90,7 +79,7 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 		{
 			rayY = py;
 			rayX = px;
-			Yoffset = 0;
+			// Yoffset = 0;
 			Xoffset = 64 / tan(rayAngle);
 		}
 		printf("rayX: %f, rayY: %f\n", rayX, rayY);
@@ -206,6 +195,7 @@ int main(void)
 	SDL_FillRect(screenSurface, NULL,
 		     SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
 
+	/* draw map */
 	for (int x = 0; x < mapWidth; x++)
 	{
 		for (int y = 0; y < mapHeight; y++)
@@ -217,6 +207,19 @@ int main(void)
 				SDL_SetRenderDrawColor(renderer, 0x00, 0x00,
 						       0x00, 0xFF);
 				SDL_RenderFillRect(renderer, &wall);
+				// render horizontal and vertical lines
+				SDL_Rect line = {x * UNIT, 0, UNIT,
+						 mapHeight * UNIT};
+				SDL_Rect line2 = {0, y * UNIT, mapWidth * UNIT,
+						  UNIT};
+				SDL_SetRenderDrawColor(renderer, 0x80, 0x80,
+						       0x80, 0xFF);
+				SDL_RenderDrawRect(renderer, &line2);
+				SDL_SetRenderDrawColor(renderer, 0x80, 0x80,
+						       0x80, 0xFF);
+				SDL_RenderDrawRect(renderer, &line);
+				line.y = mapHeight * UNIT;
+				SDL_RenderDrawRect(renderer, &line);
 			}
 		}
 	}
@@ -301,6 +304,30 @@ int main(void)
 							    0x00, 0x00, 0xFF);
 							SDL_RenderFillRect(
 							    renderer, &wall);
+
+							// render horizontal and
+							// vertical lines
+							SDL_Rect line = {
+							    x * UNIT, 0, UNIT,
+							    mapHeight * UNIT};
+							SDL_Rect line2 = {
+							    0, y * UNIT,
+							    mapWidth * UNIT,
+							    UNIT};
+							SDL_SetRenderDrawColor(
+							    renderer, 0x80,
+							    0x80, 0x80, 0xFF);
+							SDL_RenderDrawRect(
+							    renderer, &line2);
+							SDL_SetRenderDrawColor(
+							    renderer, 0x80,
+							    0x80, 0x80, 0xFF);
+							SDL_RenderDrawRect(
+							    renderer, &line);
+							line.y =
+							    mapHeight * UNIT;
+							SDL_RenderDrawRect(
+							    renderer, &line);
 						}
 					}
 				}

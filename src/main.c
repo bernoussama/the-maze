@@ -40,8 +40,8 @@ int worldMap[mapWidth][mapHeight] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
 
 /* Screen dimension constants */
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
+const int SCREEN_HEIGHT = 1536;
+const int SCREEN_WIDTH = SCREEN_HEIGHT * 2;
 
 const int UNIT = 64;
 // const int WALL_HEIGHT = 64 * UNIT;
@@ -90,6 +90,7 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 		{
 			rayY = py;
 			rayX = px;
+			Yoffset = 0;
 			Xoffset = 64 / tan(rayAngle);
 		}
 		printf("rayX: %f, rayY: %f\n", rayX, rayY);
@@ -104,6 +105,7 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 			rayY += Yoffset;
 			x = (int)rayX >> 6;
 			y = (int)rayY >> 6;
+			printf("x: %d, y: %d\n", x, y);
 		}
 		SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
 		SDL_RenderDrawLine(renderer, px, py, rayX, rayY);
@@ -203,18 +205,17 @@ int main(void)
 	// Fill the surface white
 	SDL_FillRect(screenSurface, NULL,
 		     SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
-	// Draw the map
-	for (int y = mapHeight - 1; y >= 0; y--)
+
+	for (int x = 0; x < mapWidth; x++)
 	{
-		for (int x = 0; x < mapWidth; x++)
+		for (int y = 0; y < mapHeight; y++)
 		{
-			if (worldMap[x][y] > 0)
+			if (worldMap[y][x] > 0)
 			{
-				SDL_Rect wall = {x * 20, y * 20, 20,
-						 20}; // Adjust size as needed
-				SDL_SetRenderDrawColor(
-				    renderer, 0x00, 0x00, 0x00,
-				    0xFF); // Black color for walls
+				SDL_Rect wall = {x * UNIT, y * UNIT, UNIT,
+						 UNIT};
+				SDL_SetRenderDrawColor(renderer, 0x00, 0x00,
+						       0x00, 0xFF);
 				SDL_RenderFillRect(renderer, &wall);
 			}
 		}
@@ -288,20 +289,16 @@ int main(void)
 				// Draw the map
 				for (int x = 0; x < mapWidth; x++)
 				{
-					for (int y = mapHeight - 1; y >= 0; y--)
+					for (int y = 0; y < mapHeight; y++)
 					{
-						if (worldMap[x][y] > 0)
+						if (worldMap[y][x] > 0)
 						{
 							SDL_Rect wall = {
-							    x * 20, y * 20, 20,
-							    20}; // Adjust size
-								 // as needed
+							    x * UNIT, y * UNIT,
+							    UNIT, UNIT};
 							SDL_SetRenderDrawColor(
 							    renderer, 0x00,
-							    0x00, 0x00,
-							    0xFF); // Black
-								   // color for
-								   // walls
+							    0x00, 0x00, 0xFF);
 							SDL_RenderFillRect(
 							    renderer, &wall);
 						}

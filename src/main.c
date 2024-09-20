@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_assert.h>
+#include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <math.h>
 #include <stdbool.h>
@@ -321,7 +322,8 @@ int main(void)
 
 	// Draw the player
 	SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
-	SDL_RenderFillRect(renderer, &player);
+	SDL_Rect playerRect = {posX - 4, posY - 4, 8, 8};
+	SDL_RenderFillRect(renderer, &playerRect);
 
 	pdeltaX = cos(pangle) * 5;
 	pdeltaY = sin(pangle) * 5;
@@ -335,6 +337,8 @@ int main(void)
 	bool quit = false;
 	while (quit == false)
 	{
+
+		const Uint8 *state = SDL_GetKeyboardState(NULL);
 		while (SDL_PollEvent(&e))
 		{
 			// printf("Event type: %d\n", e.type);
@@ -344,97 +348,95 @@ int main(void)
 				quit = true;
 			}
 			// User presses a key
-			else if (e.type == SDL_KEYDOWN)
+			// else if (e.type == SDL_KEYDOWN)
+			if (state[SDL_SCANCODE_UP])
 			{
-				switch (e.key.keysym.sym)
-				{
-				case SDLK_UP:
-					player.x += pdeltaX;
-					player.y += pdeltaY;
-					break;
-				case SDLK_DOWN:
-					player.x -= pdeltaX;
-					player.y -= pdeltaY;
-					break;
-				case SDLK_LEFT:
-					pangle += 0.1; // Rotate the player left
-					if (pangle > 2 * PI)
-						pangle -= 2 * PI;
-					pdeltaX = cos(pangle) * 5;
-					pdeltaY = -sin(pangle) *
-						  5; // minus because fckn sdl
-						     // have y flipped
-					break;
-				case SDLK_RIGHT:
-					pangle -= 0.1; // Rotate the player left
-					if (pangle < 0)
-						pangle += 2 * PI;
-					pdeltaX = cos(pangle) * 5;
-					pdeltaY = -sin(pangle) *
-						  5; // minus because fckn sdl
-						     // have y flipped
-					break;
-				default:
-					continue;
-				}
+				player.x += pdeltaX;
+				player.y += pdeltaY;
+			}
+			if (state[SDL_SCANCODE_DOWN])
+			{
+				player.x -= pdeltaX;
+				player.y -= pdeltaY;
+			}
+			if (state[SDL_SCANCODE_LEFT])
+			{
+				pangle += 0.1; // Rotate the player left
+				if (pangle > 2 * PI)
+					pangle -= 2 * PI;
+				pdeltaX = cos(pangle) * 5;
+				pdeltaY =
+				    -sin(pangle) *
+				    5; // minus because fckn sdl have y flipped
+			}
+			if (state[SDL_SCANCODE_RIGHT])
+			{
+				pangle -= 0.1; // Rotate the player right
+				if (pangle < 0)
+					pangle += 2 * PI;
+				pdeltaX = cos(pangle) * 5;
+				pdeltaY =
+				    -sin(pangle) *
+				    5; // minus because fckn sdl have y flipped
+			}
 
-				SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF,
-						       0xFF, 0xFF);
-				SDL_RenderClear(renderer);
-				// Draw the map
-				for (int x = 0; x < mapWidth; x++)
+			SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF,
+					       0xFF);
+			SDL_RenderClear(renderer);
+			// Draw the map
+			for (int x = 0; x < mapWidth; x++)
+			{
+				for (int y = 0; y < mapHeight; y++)
 				{
-					for (int y = 0; y < mapHeight; y++)
+					if (worldMap[y][x] > 0)
 					{
-						if (worldMap[y][x] > 0)
-						{
-							SDL_Rect wall = {
-							    x * UNIT, y * UNIT,
-							    UNIT, UNIT};
-							SDL_SetRenderDrawColor(
-							    renderer, 0x00,
-							    0x00, 0x00, 0xFF);
-							SDL_RenderFillRect(
-							    renderer, &wall);
+						SDL_Rect wall = {x * UNIT,
+								 y * UNIT, UNIT,
+								 UNIT};
+						SDL_SetRenderDrawColor(
+						    renderer, 0x00, 0x00, 0x00,
+						    0xFF);
+						SDL_RenderFillRect(renderer,
+								   &wall);
 
-							// render horizontal and
-							// vertical lines
-							SDL_Rect line = {
-							    x * UNIT, 0, UNIT,
-							    mapHeight * UNIT};
-							SDL_Rect line2 = {
-							    0, y * UNIT,
-							    mapWidth * UNIT,
-							    UNIT};
-							SDL_SetRenderDrawColor(
-							    renderer, 0x80,
-							    0x80, 0x80, 0xFF);
-							SDL_RenderDrawRect(
-							    renderer, &line2);
-							SDL_SetRenderDrawColor(
-							    renderer, 0x80,
-							    0x80, 0x80, 0xFF);
-							SDL_RenderDrawRect(
-							    renderer, &line);
-							line.y =
-							    mapHeight * UNIT;
-							SDL_RenderDrawRect(
-							    renderer, &line);
-						}
+						// render horizontal and
+						// vertical lines
+						SDL_Rect line = {
+						    x * UNIT, 0, UNIT,
+						    mapHeight * UNIT};
+						SDL_Rect line2 = {
+						    0, y * UNIT,
+						    mapWidth * UNIT, UNIT};
+						SDL_SetRenderDrawColor(
+						    renderer, 0x80, 0x80, 0x80,
+						    0xFF);
+						SDL_RenderDrawRect(renderer,
+								   &line2);
+						SDL_SetRenderDrawColor(
+						    renderer, 0x80, 0x80, 0x80,
+						    0xFF);
+						SDL_RenderDrawRect(renderer,
+								   &line);
+						line.y = mapHeight * UNIT;
+						SDL_RenderDrawRect(renderer,
+								   &line);
 					}
 				}
-				SDL_SetRenderDrawColor(renderer, 0xFF, 0x00,
-						       0x00, 0xFF);
-				SDL_RenderFillRect(renderer, &player);
-
-				SDL_SetRenderDrawColor(renderer, 0x00, 0x00,
-						       0xFF, 0xFF);
-				// SDL_RenderDrawLine(renderer, player.x,
-				// player.y, 		   player.x + pdeltaX *
-				// 5, 		   player.y + pdeltaY * 5);
-				drawRays(renderer, player.x, player.y, pangle);
-				SDL_RenderPresent(renderer);
 			}
+			SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00,
+					       0xFF);
+			/* player rect */
+			playerRect.x = player.x - 4;
+			playerRect.y = player.y - 4;
+			SDL_RenderFillRect(renderer, &playerRect);
+
+			SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF,
+					       0xFF);
+			// SDL_RenderDrawLine(renderer, player.x,
+			// player.y, 		   player.x + pdeltaX *
+			// 5, 		   player.y + pdeltaY * 5);
+			drawRays(renderer, player.x, player.y, pangle);
+			SDL_RenderPresent(renderer);
 		}
 	}
 	// Destroy window

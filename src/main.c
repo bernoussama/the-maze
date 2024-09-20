@@ -1,9 +1,11 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_assert.h>
+#include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
+
 #define PI 3.14159265358979323846
 #define DEG 0.01745329 /* one degree in radians */
 
@@ -34,9 +36,9 @@ const int SCREEN_HEIGHT = 512;
 const int SCREEN_WIDTH = SCREEN_HEIGHT * 2;
 
 const int UNIT = 64;
-// const int WALL_HEIGHT = 64 * UNIT;
-// const int PLAYER_HEIGHT = WALL_HEIGHT / 2;
-// const int FOV = 60;
+const int WALL_HEIGHT = UNIT;
+const int PLAYER_HEIGHT = WALL_HEIGHT / 2;
+const int FOV = 60;
 // const int INIT_ANGLE = 45;
 //
 // const int projection_width = 320;
@@ -45,9 +47,14 @@ const int UNIT = 64;
 // const double columns = projection_width;
 // const double distance_to_projection = projection_width / tan(FOV / 2);
 //
-double correctDistance(double distance, double angle);
-double correctDistance(double distance, double angle)
+double correctDistance(double distance, double rayAngle, double playerAngle);
+double correctDistance(double distance, double rayAngle, double playerAngle)
 {
+	double angle = playerAngle - rayAngle;
+	if (angle < 0)
+		angle += 2 * PI;
+	if (angle > 2 * PI)
+		angle -= 2 * PI;
 	return distance * cos(angle);
 }
 
@@ -57,7 +64,7 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 {
 
 	double rayAngle, rayX, rayY, Xoffset, Yoffset, hRayX, hRayY, vRayX,
-	    vRayY, hDistance, vDistance;
+	    vRayY, hDistance, vDistance, distance, factor, lineHeight;
 	rayAngle = playerAngle + DEG * 30;
 	if (rayAngle < 0)
 		rayAngle += 2 * PI;
@@ -65,10 +72,11 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 		rayAngle -= 2 * PI;
 
 	int rays, x, y;
-	rays = 60;
+	factor = 64 >> 8; /* multiply by 256 */
+	rays = FOV;
 	for (int ray = 0; ray < rays; ray++)
 	{
-		/* horizontal lines */
+		/* --- horizontal lines --- */
 		if (rayAngle < PI && rayAngle > 0)
 		{
 			rayY = (((int)py >> 6) << 6) -
@@ -106,11 +114,8 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 		hRayX = rayX;
 		hRayY = rayY;
 		hDistance = sqrt(pow(px - rayX, 2) + pow(py - rayY, 2));
-		// SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
-		// SDL_RenderDrawLine(renderer, px, py, rayX, rayY);
-		//
 
-		/* vertical lines */
+		/* --- vertical lines --- */
 		if (rayAngle < PI / 2 || rayAngle > (3 * PI) / 2)
 		{
 			rayX = (((int)px >> 6) << 6) +
@@ -153,12 +158,36 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 		{
 			rayX = hRayX;
 			rayY = hRayY;
+			distance = hDistance;
+		}
+		else
+		{
+			distance = vDistance;
 		}
 
-		SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
+		SDL_SetRenderDrawColor(renderer, 0x00, 0xFE, 0x00, 0xFF);
 		SDL_RenderDrawLine(renderer, px, py, rayX, rayY);
 
-		// SDL_RenderPresent(renderer);
+		/* --- draw 3d walls --- */
+		int height = SCREEN_HEIGHT;
+		lineHeight = (WALL_HEIGHT * height) /
+			     correctDistance(distance, rayAngle, playerAngle);
+		if (lineHeight > height)
+			lineHeight = height;
+
+		distance == hDistance
+		    ? SDL_SetRenderDrawColor(renderer, 0xAA, 0x00, 0x00, 0xFF)
+		    : SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
+
+		SDL_Rect wallSlice;
+		wallSlice.x = (ray * (SCREEN_HEIGHT / rays)) + SCREEN_HEIGHT;
+		wallSlice.y = (int)(SCREEN_HEIGHT / 2) - (lineHeight / 2);
+		wallSlice.w = (SCREEN_HEIGHT / rays);
+		wallSlice.h = lineHeight;
+
+		SDL_RenderFillRect(renderer, &wallSlice);
+
+		/* increment ray angle */
 		rayAngle -= DEG;
 		if (rayAngle < 0)
 			rayAngle += 2 * PI;
@@ -220,40 +249,10 @@ int main(void)
 	// Get window surface
 	screenSurface = SDL_GetWindowSurface(window);
 
-	// Fill the surface white
-	// SDL_FillRect(screenSurface, NULL,
-	//              SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
-	//
-	// // Update the surface
-	// SDL_UpdateWindowSurface(window);
-
 	SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 	SDL_RenderClear(renderer);
 
-	// Render red filled quad
-	// SDL_Rect fillRect = {SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4,
-	// SCREEN_WIDTH / 2,
-	//                      SCREEN_HEIGHT / 2};
-	//
-	// SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
-	// SDL_RenderFillRect(renderer, &fillRect);
-	//
-	// // Render green outlined quad
-	// SDL_Rect outlineRect = {SCREEN_WIDTH / 6, SCREEN_HEIGHT / 6,
-	//                         SCREEN_WIDTH * 2 / 3, SCREEN_HEIGHT * 2 / 3};
-	// SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
-	// SDL_RenderDrawRect(renderer, &outlineRect);
-	//
-	// // Render blue line
-	// SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
-	// SDL_RenderDrawLine(renderer, 0, SCREEN_HEIGHT / 2, SCREEN_WIDTH,
-	//                    SCREEN_HEIGHT / 2);
-	// SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0x00, 0xFF);
-	// for (int i = 0; i < SCREEN_HEIGHT; i += 4) {
-	//   SDL_RenderDrawPoint(renderer, SCREEN_WIDTH / 2, i);
-	// }
-
-	SDL_Rect player = {posX, posY, 8, 8};
+	SDL_Rect player = {posX - 4, posY - 4, 8, 8};
 
 	// Fill the surface white
 	SDL_FillRect(screenSurface, NULL,
@@ -293,7 +292,8 @@ int main(void)
 
 	// Draw the player
 	SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
-	SDL_RenderFillRect(renderer, &player);
+	SDL_Rect playerRect = {posX - 4, posY - 4, 8, 8};
+	SDL_RenderFillRect(renderer, &playerRect);
 
 	pdeltaX = cos(pangle) * 5;
 	pdeltaY = sin(pangle) * 5;
@@ -307,6 +307,8 @@ int main(void)
 	bool quit = false;
 	while (quit == false)
 	{
+
+		const Uint8 *state = SDL_GetKeyboardState(NULL);
 		while (SDL_PollEvent(&e))
 		{
 			// printf("Event type: %d\n", e.type);
@@ -316,97 +318,95 @@ int main(void)
 				quit = true;
 			}
 			// User presses a key
-			else if (e.type == SDL_KEYDOWN)
+			// else if (e.type == SDL_KEYDOWN)
+			if (state[SDL_SCANCODE_UP])
 			{
-				switch (e.key.keysym.sym)
-				{
-				case SDLK_UP:
-					player.x += pdeltaX;
-					player.y += pdeltaY;
-					break;
-				case SDLK_DOWN:
-					player.x -= pdeltaX;
-					player.y -= pdeltaY;
-					break;
-				case SDLK_LEFT:
-					pangle += 0.1; // Rotate the player left
-					if (pangle > 2 * PI)
-						pangle -= 2 * PI;
-					pdeltaX = cos(pangle) * 5;
-					pdeltaY = -sin(pangle) *
-						  5; // minus because fckn sdl
-						     // have y flipped
-					break;
-				case SDLK_RIGHT:
-					pangle -= 0.1; // Rotate the player left
-					if (pangle < 0)
-						pangle += 2 * PI;
-					pdeltaX = cos(pangle) * 5;
-					pdeltaY = -sin(pangle) *
-						  5; // minus because fckn sdl
-						     // have y flipped
-					break;
-				default:
-					continue;
-				}
+				player.x += pdeltaX;
+				player.y += pdeltaY;
+			}
+			if (state[SDL_SCANCODE_DOWN])
+			{
+				player.x -= pdeltaX;
+				player.y -= pdeltaY;
+			}
+			if (state[SDL_SCANCODE_LEFT])
+			{
+				pangle += 0.1; // Rotate the player left
+				if (pangle > 2 * PI)
+					pangle -= 2 * PI;
+				pdeltaX = cos(pangle) * 5;
+				pdeltaY =
+				    -sin(pangle) *
+				    5; // minus because fckn sdl have y flipped
+			}
+			if (state[SDL_SCANCODE_RIGHT])
+			{
+				pangle -= 0.1; // Rotate the player right
+				if (pangle < 0)
+					pangle += 2 * PI;
+				pdeltaX = cos(pangle) * 5;
+				pdeltaY =
+				    -sin(pangle) *
+				    5; // minus because fckn sdl have y flipped
+			}
 
-				SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF,
-						       0xFF, 0xFF);
-				SDL_RenderClear(renderer);
-				// Draw the map
-				for (int x = 0; x < mapWidth; x++)
+			SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF,
+					       0xFF);
+			SDL_RenderClear(renderer);
+			// Draw the map
+			for (int x = 0; x < mapWidth; x++)
+			{
+				for (int y = 0; y < mapHeight; y++)
 				{
-					for (int y = 0; y < mapHeight; y++)
+					if (worldMap[y][x] > 0)
 					{
-						if (worldMap[y][x] > 0)
-						{
-							SDL_Rect wall = {
-							    x * UNIT, y * UNIT,
-							    UNIT, UNIT};
-							SDL_SetRenderDrawColor(
-							    renderer, 0x00,
-							    0x00, 0x00, 0xFF);
-							SDL_RenderFillRect(
-							    renderer, &wall);
+						SDL_Rect wall = {x * UNIT,
+								 y * UNIT, UNIT,
+								 UNIT};
+						SDL_SetRenderDrawColor(
+						    renderer, 0x00, 0x00, 0x00,
+						    0xFF);
+						SDL_RenderFillRect(renderer,
+								   &wall);
 
-							// render horizontal and
-							// vertical lines
-							SDL_Rect line = {
-							    x * UNIT, 0, UNIT,
-							    mapHeight * UNIT};
-							SDL_Rect line2 = {
-							    0, y * UNIT,
-							    mapWidth * UNIT,
-							    UNIT};
-							SDL_SetRenderDrawColor(
-							    renderer, 0x80,
-							    0x80, 0x80, 0xFF);
-							SDL_RenderDrawRect(
-							    renderer, &line2);
-							SDL_SetRenderDrawColor(
-							    renderer, 0x80,
-							    0x80, 0x80, 0xFF);
-							SDL_RenderDrawRect(
-							    renderer, &line);
-							line.y =
-							    mapHeight * UNIT;
-							SDL_RenderDrawRect(
-							    renderer, &line);
-						}
+						// render horizontal and
+						// vertical lines
+						SDL_Rect line = {
+						    x * UNIT, 0, UNIT,
+						    mapHeight * UNIT};
+						SDL_Rect line2 = {
+						    0, y * UNIT,
+						    mapWidth * UNIT, UNIT};
+						SDL_SetRenderDrawColor(
+						    renderer, 0x80, 0x80, 0x80,
+						    0xFF);
+						SDL_RenderDrawRect(renderer,
+								   &line2);
+						SDL_SetRenderDrawColor(
+						    renderer, 0x80, 0x80, 0x80,
+						    0xFF);
+						SDL_RenderDrawRect(renderer,
+								   &line);
+						line.y = mapHeight * UNIT;
+						SDL_RenderDrawRect(renderer,
+								   &line);
 					}
 				}
-				SDL_SetRenderDrawColor(renderer, 0xFF, 0x00,
-						       0x00, 0xFF);
-				SDL_RenderFillRect(renderer, &player);
-
-				SDL_SetRenderDrawColor(renderer, 0x00, 0x00,
-						       0xFF, 0xFF);
-				SDL_RenderDrawLine(renderer, player.x, player.y,
-						   player.x + pdeltaX * 5,
-						   player.y + pdeltaY * 5);
-				drawRays(renderer, player.x, player.y, pangle);
-				SDL_RenderPresent(renderer);
 			}
+			SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00,
+					       0xFF);
+			/* player rect */
+			playerRect.x = player.x - 4;
+			playerRect.y = player.y - 4;
+			SDL_RenderFillRect(renderer, &playerRect);
+
+			SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF,
+					       0xFF);
+			// SDL_RenderDrawLine(renderer, player.x,
+			// player.y, 		   player.x + pdeltaX *
+			// 5, 		   player.y + pdeltaY * 5);
+			drawRays(renderer, player.x, player.y, pangle);
+			SDL_RenderPresent(renderer);
 		}
 	}
 	// Destroy window

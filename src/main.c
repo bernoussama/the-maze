@@ -253,7 +253,7 @@ int main(void)
 	//   SDL_RenderDrawPoint(renderer, SCREEN_WIDTH / 2, i);
 	// }
 
-	SDL_Rect player = {posX, posY, 8, 8};
+	SDL_Rect player = {posX - 4, posY - 4, 8, 8};
 
 	// Fill the surface white
 	SDL_FillRect(screenSurface, NULL,
@@ -401,9 +401,9 @@ int main(void)
 
 				SDL_SetRenderDrawColor(renderer, 0x00, 0x00,
 						       0xFF, 0xFF);
-				SDL_RenderDrawLine(renderer, player.x, player.y,
-						   player.x + pdeltaX * 5,
-						   player.y + pdeltaY * 5);
+				// SDL_RenderDrawLine(renderer, player.x,
+				// player.y, 		   player.x + pdeltaX *
+				// 5, 		   player.y + pdeltaY * 5);
 				drawRays(renderer, player.x, player.y, pangle);
 				SDL_RenderPresent(renderer);
 			}

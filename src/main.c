@@ -50,7 +50,8 @@ void drawRays(SDL_Renderer *renderer, double x, double y, double playerAngle);
 void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 {
 
-	double rayAngle, rayX, rayY, Xoffset, Yoffset;
+	double rayAngle, rayX, rayY, Xoffset, Yoffset, hRayX, hRayY, vRayX,
+	    vRayY, hDistance, vDistance;
 	rayAngle = playerAngle;
 	printf("rayAngle: %f\n", rayAngle);
 
@@ -58,29 +59,74 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 	rays = 1;
 	for (int ray = 0; ray < rays; ray++)
 	{
-		if (rayAngle < PI && rayAngle > 0)
-		{
-			rayY = (((int)py >> 6) << 6) -
-			       1; // bit shift shananigans to round down
-			rayX = px + (py - rayY) / tan(rayAngle);
-			Yoffset = -64;
-			Xoffset = 64 / tan(rayAngle);
-		}
-		else if (rayAngle > PI && rayAngle < (2 * PI))
-		{
-			rayY = (((int)py >> 6) << 6) +
-			       64; // bit shift shananigans to round down
-			rayX = px + (py - rayY) / tan(rayAngle);
-			Yoffset = 64;
+		/* horizontal lines */
+		// if (rayAngle < PI && rayAngle > 0)
+		// {
+		// 	rayY = (((int)py >> 6) << 6) -
+		// 	       1; // bit shift shananigans to round down
+		// 	rayX = px + (py - rayY) / tan(rayAngle);
+		// 	Yoffset = -64;
+		// 	Xoffset = 64 / tan(rayAngle);
+		// }
+		// else if (rayAngle > PI && rayAngle < (2 * PI))
+		// {
+		// 	rayY = (((int)py >> 6) << 6) +
+		// 	       64; // bit shift shananigans to round down
+		// 	rayX = px + (py - rayY) / tan(rayAngle);
+		// 	Yoffset = 64;
+		//
+		// 	Xoffset = -64 / tan(rayAngle);
+		// }
+		// else if (rayAngle == 0 || rayAngle == PI)
+		// {
+		// 	rayY = py;
+		// 	rayX = px;
+		// 	// Yoffset = 0;
+		// 	Xoffset = 64 / tan(rayAngle);
+		// }
+		// printf("rayX: %f, rayY: %f\n", rayX, rayY);
+		// x = (int)rayX >> 6;
+		// y = (int)rayY >> 6;
+		// printf("x: %d, y: %d\n", x, y);
+		// while (x >= 0 && x < mapWidth && y >= 0 && y < mapHeight &&
+		//        worldMap[y][x] <= 0)
+		// {
+		// 	printf("x: %d, y: %d\n", x, y);
+		// 	rayX += Xoffset;
+		// 	rayY += Yoffset;
+		// 	x = (int)rayX >> 6;
+		// 	y = (int)rayY >> 6;
+		// 	printf("x: %d, y: %d\n", x, y);
+		// }
+		// hDistance = sqrt(pow(px - rayX, 2) + pow(py - rayY, 2));
+		// SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
+		// SDL_RenderDrawLine(renderer, px, py, rayX, rayY);
+		//
+		// SDL_RenderPresent(renderer);
 
-			Xoffset = -64 / tan(rayAngle);
+		/* vertical lines */
+		if (rayAngle < PI / 2 || rayAngle > (3 * PI) / 2)
+		{
+			rayX = (((int)px >> 6) << 6) +
+			       64; // bit shift shananigans to round down
+			rayY = py + (px - rayX) * tan(rayAngle);
+			Yoffset = -64 * tan(rayAngle);
+			Xoffset = 64;
 		}
-		else if (rayAngle == 0 || rayAngle == PI)
+		else if (rayAngle > PI / 2 && rayAngle < (3 * PI) / 2)
+		{
+			rayX = (((int)px >> 6) << 6) -
+			       1; // bit shift shananigans to round down
+			rayY = py + (px - rayX) * tan(rayAngle);
+			Yoffset = -64 * tan(rayAngle);
+			Xoffset = 64;
+		}
+		else if (rayAngle == PI / 2 || rayAngle == (3 * PI) / 2)
 		{
 			rayY = py;
 			rayX = px;
-			// Yoffset = 0;
-			Xoffset = 64 / tan(rayAngle);
+			Xoffset = 0;
+			Yoffset = 64 / tan(rayAngle);
 		}
 		printf("rayX: %f, rayY: %f\n", rayX, rayY);
 		x = (int)rayX >> 6;
@@ -96,6 +142,7 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 			y = (int)rayY >> 6;
 			printf("x: %d, y: %d\n", x, y);
 		}
+		vDistance = sqrt(pow(px - rayX, 2) + pow(py - rayY, 2));
 		SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
 		SDL_RenderDrawLine(renderer, px, py, rayX, rayY);
 

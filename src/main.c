@@ -124,8 +124,8 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 			rayX = (((int)px >> 6) << 6) -
 			       1; // bit shift shananigans to round down
 			rayY = py + (px - rayX) * tan(rayAngle);
-			Yoffset = -64 * tan(rayAngle);
-			Xoffset = 64;
+			Yoffset = 64 * tan(rayAngle);
+			Xoffset = -64;
 		}
 		else if (rayAngle == PI / 2 || rayAngle == (3 * PI) / 2)
 		{

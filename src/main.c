@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
+
 #define PI 3.14159265358979323846
 #define DEG 0.01745329 /* one degree in radians */
 
@@ -34,9 +35,9 @@ const int SCREEN_HEIGHT = 512;
 const int SCREEN_WIDTH = SCREEN_HEIGHT * 2;
 
 const int UNIT = 64;
-// const int WALL_HEIGHT = 64 * UNIT;
-// const int PLAYER_HEIGHT = WALL_HEIGHT / 2;
-// const int FOV = 60;
+const int WALL_HEIGHT = UNIT;
+const int PLAYER_HEIGHT = WALL_HEIGHT / 2;
+const int FOV = 60;
 // const int INIT_ANGLE = 45;
 //
 // const int projection_width = 320;
@@ -45,9 +46,14 @@ const int UNIT = 64;
 // const double columns = projection_width;
 // const double distance_to_projection = projection_width / tan(FOV / 2);
 //
-double correctDistance(double distance, double angle);
-double correctDistance(double distance, double angle)
+double correctDistance(double distance, double rayAngle, double playerAngle);
+double correctDistance(double distance, double rayAngle, double playerAngle)
 {
+	double angle = playerAngle - rayAngle;
+	if (angle < 0)
+		angle += 2 * PI;
+	if (angle > 2 * PI)
+		angle -= 2 * PI;
 	return distance * cos(angle);
 }
 
@@ -57,7 +63,7 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 {
 
 	double rayAngle, rayX, rayY, Xoffset, Yoffset, hRayX, hRayY, vRayX,
-	    vRayY, hDistance, vDistance;
+	    vRayY, hDistance, vDistance, distance, factor, lineHeight;
 	rayAngle = playerAngle + DEG * 30;
 	if (rayAngle < 0)
 		rayAngle += 2 * PI;
@@ -65,10 +71,11 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 		rayAngle -= 2 * PI;
 
 	int rays, x, y;
-	rays = 60;
+	factor = 64 >> 8; /* multiply by 256 */
+	rays = FOV;
 	for (int ray = 0; ray < rays; ray++)
 	{
-		/* horizontal lines */
+		/* --- horizontal lines --- */
 		if (rayAngle < PI && rayAngle > 0)
 		{
 			rayY = (((int)py >> 6) << 6) -
@@ -106,11 +113,8 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 		hRayX = rayX;
 		hRayY = rayY;
 		hDistance = sqrt(pow(px - rayX, 2) + pow(py - rayY, 2));
-		// SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
-		// SDL_RenderDrawLine(renderer, px, py, rayX, rayY);
-		//
 
-		/* vertical lines */
+		/* --- vertical lines --- */
 		if (rayAngle < PI / 2 || rayAngle > (3 * PI) / 2)
 		{
 			rayX = (((int)px >> 6) << 6) +
@@ -153,12 +157,36 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 		{
 			rayX = hRayX;
 			rayY = hRayY;
+			distance = hDistance;
+		}
+		else
+		{
+			distance = vDistance;
 		}
 
-		SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
+		SDL_SetRenderDrawColor(renderer, 0x00, 0xFE, 0x00, 0xFF);
 		SDL_RenderDrawLine(renderer, px, py, rayX, rayY);
 
-		// SDL_RenderPresent(renderer);
+		/* --- draw 3d walls --- */
+		int height = SCREEN_HEIGHT;
+		lineHeight = (WALL_HEIGHT * height) /
+			     correctDistance(distance, rayAngle, playerAngle);
+		if (lineHeight > height)
+			lineHeight = height;
+
+		distance == hDistance
+		    ? SDL_SetRenderDrawColor(renderer, 0xAA, 0x00, 0x00, 0xFF)
+		    : SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
+
+		SDL_Rect wallSlice;
+		wallSlice.x = (ray * (SCREEN_HEIGHT / rays)) + SCREEN_HEIGHT;
+		wallSlice.y = (int)(SCREEN_HEIGHT / 2) - (lineHeight / 2);
+		wallSlice.w = (SCREEN_HEIGHT / rays);
+		wallSlice.h = lineHeight;
+
+		SDL_RenderFillRect(renderer, &wallSlice);
+
+		/* increment ray angle */
 		rayAngle -= DEG;
 		if (rayAngle < 0)
 			rayAngle += 2 * PI;

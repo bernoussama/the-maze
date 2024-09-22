@@ -180,9 +180,10 @@ void drawRays(SDL_Renderer *renderer, double px, double py, double playerAngle)
 		    : SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
 
 		SDL_Rect wallSlice;
-		wallSlice.x = (ray * (SCREEN_HEIGHT / rays)) + SCREEN_HEIGHT;
+		wallSlice.x =
+		    ((ray) * (SCREEN_WIDTH / 2 / rays)) + (SCREEN_WIDTH / 2);
 		wallSlice.y = (int)(SCREEN_HEIGHT / 2) - (lineHeight / 2);
-		wallSlice.w = (SCREEN_HEIGHT / rays);
+		wallSlice.w = (SCREEN_WIDTH / 2) / rays;
 		wallSlice.h = lineHeight;
 
 		SDL_RenderFillRect(renderer, &wallSlice);
@@ -290,6 +291,18 @@ int main(void)
 	// Update the surface
 	SDL_UpdateWindowSurface(window);
 
+	// draw floor
+	SDL_SetRenderDrawColor(renderer, 0x00, 0x80, 0x00, 0xFE);
+	SDL_Rect floorRect = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2,
+			      SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2};
+	SDL_RenderFillRect(renderer, &floorRect);
+
+	// draw ceiling
+	SDL_Rect ceilingRect = {SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2,
+				SCREEN_HEIGHT / 2};
+	SDL_SetRenderDrawColor(renderer, 0x00, 0x50, 0xFF, 0x60);
+	SDL_RenderFillRect(renderer, &ceilingRect);
+
 	// Draw the player
 	SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
 	SDL_Rect playerRect = {posX - 4, posY - 4, 8, 8};
@@ -300,6 +313,7 @@ int main(void)
 	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
 	SDL_RenderDrawLine(renderer, player.x, player.y, player.x + pdeltaX * 5,
 			   player.y + pdeltaY * 5);
+
 	SDL_RenderPresent(renderer);
 
 	// Hack to get window to stay up
@@ -311,6 +325,7 @@ int main(void)
 		const Uint8 *state = SDL_GetKeyboardState(NULL);
 		while (SDL_PollEvent(&e))
 		{
+
 			// printf("Event type: %d\n", e.type);
 			if (e.type == SDL_QUIT)
 			{
@@ -352,7 +367,9 @@ int main(void)
 
 			SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF,
 					       0xFF);
+
 			SDL_RenderClear(renderer);
+
 			// Draw the map
 			for (int x = 0; x < mapWidth; x++)
 			{
@@ -395,6 +412,7 @@ int main(void)
 			}
 			SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00,
 					       0xFF);
+
 			/* player rect */
 			playerRect.x = player.x - 4;
 			playerRect.y = player.y - 4;
@@ -405,6 +423,13 @@ int main(void)
 			// SDL_RenderDrawLine(renderer, player.x,
 			// player.y, 		   player.x + pdeltaX *
 			// 5, 		   player.y + pdeltaY * 5);
+			//
+			SDL_SetRenderDrawColor(renderer, 0x00, 0x50, 0xFF,
+					       0x80);
+			SDL_RenderFillRect(renderer, &ceilingRect);
+			SDL_SetRenderDrawColor(renderer, 0x00, 0x80, 0x00,
+					       0xFE);
+			SDL_RenderFillRect(renderer, &floorRect);
 			drawRays(renderer, player.x, player.y, pangle);
 			SDL_RenderPresent(renderer);
 		}

@@ -31,7 +31,8 @@ make run
 
 ## Demo
 
-TODO: Add a demo
+https://github.com/user-attachments/assets/ccf8beb8-1f48-4565-bc0d-a821c690ecf3
+
 
 ## References
 - [Raycasting video tutorial using OpenGL(Great Guide)](https://www.youtube.com/watch?v=gYRrGTC7GtA)
@@ -40,6 +41,5 @@ TODO: Add a demo
 
 ## License
 
-MIT
 ![GitHub](https://img.shields.io/github/license/0ussamaBernou/the-maze)
 

@@ -326,23 +326,49 @@ int main(void)
 		while (SDL_PollEvent(&e))
 		{
 
-			// printf("Event type: %d\n", e.type);
 			if (e.type == SDL_QUIT)
 			{
-				// printf("Event quit: %d\n", e.type);
 				quit = true;
 			}
-			// User presses a key
-			// else if (e.type == SDL_KEYDOWN)
+
+			/* collison detection */
+			/* offset for player collision detection */
+			int xo, yo;
+			int ipx, ipy, ipxAddxo, ipyAddyo, ipxSubxo, ipySubyo;
+			xo = 0;
+			if (pdeltaX < 0)
+				xo = -10;
+			else
+				xo = 10;
+
+			yo = 0;
+			if (pdeltaY < 0)
+				yo = -10;
+			else
+				yo = 10;
+
+			ipx = (int)(player.x) >> 6;
+			ipy = (int)(player.y) >> 6;
+			ipxAddxo = (int)(player.x + xo) >> 6;
+			ipyAddyo = (int)(player.y + yo) >> 6;
+			ipxSubxo = (int)(player.x - xo) >> 6;
+			ipySubyo = (int)(player.y - yo) >> 6;
+
 			if (state[SDL_SCANCODE_UP])
 			{
-				player.x += pdeltaX;
-				player.y += pdeltaY;
+				if (worldMap[ipyAddyo][ipxAddxo] == 0)
+				{
+					player.x += pdeltaX;
+					player.y += pdeltaY;
+				}
 			}
 			if (state[SDL_SCANCODE_DOWN])
 			{
-				player.x -= pdeltaX;
-				player.y -= pdeltaY;
+				if (worldMap[ipySubyo][ipxSubxo] == 0)
+				{
+					player.x -= pdeltaX;
+					player.y -= pdeltaY;
+				}
 			}
 			if (state[SDL_SCANCODE_LEFT])
 			{
@@ -350,9 +376,8 @@ int main(void)
 				if (pangle > 2 * PI)
 					pangle -= 2 * PI;
 				pdeltaX = cos(pangle) * 5;
-				pdeltaY =
-				    -sin(pangle) *
-				    5; // minus because fckn sdl have y flipped
+				pdeltaY = -sin(pangle) * 5;
+				/* minus because sdl have y flipped */
 			}
 			if (state[SDL_SCANCODE_RIGHT])
 			{
@@ -418,16 +443,21 @@ int main(void)
 			playerRect.y = player.y - 4;
 			SDL_RenderFillRect(renderer, &playerRect);
 
+			// SDL_Rect offsetRect = {player.x + xo, player.y + yo,
+			// 2, 		       2}; SDL_RenderFillRect(renderer,
+			// &offsetRect);
+
 			SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF,
 					       0xFF);
 			// SDL_RenderDrawLine(renderer, player.x,
 			// player.y, 		   player.x + pdeltaX *
 			// 5, 		   player.y + pdeltaY * 5);
 			//
+
 			SDL_SetRenderDrawColor(renderer, 0x00, 0x50, 0xFF,
 					       0x80);
 			SDL_RenderFillRect(renderer, &ceilingRect);
-			SDL_SetRenderDrawColor(renderer, 0x00, 0x80, 0x00,
+			SDL_SetRenderDrawColor(renderer, 0x80, 0x80, 0x80,
 					       0xFE);
 			SDL_RenderFillRect(renderer, &floorRect);
 			drawRays(renderer, player.x, player.y, pangle);

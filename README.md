@@ -35,7 +35,7 @@ make run
 https://github.com/user-attachments/assets/ccf8beb8-1f48-4565-bc0d-a821c690ecf3
 
 - Collision Detection
-- 
+
 https://github.com/user-attachments/assets/a55f124d-be14-4524-8acc-0c94a43da700
 
 
